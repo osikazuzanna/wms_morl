@@ -4,7 +4,7 @@ Official code repository for ["New Frontiers in Multi-Objective RL: Water Resour
 
 *Many real-world problems (e.g., water resource management, autonomous driving, drug discovery) require optimizing multiple, conflicting objectives. Multi-objective reinforcement learning (MORL) extends classical RL to handle several objectives simultaneously, yielding a set of policies that capture various trade-offs. However, the field still lacks complex, realistic environments and benchmarks. We introduce two water resource management case studies—the Nile and Susquehanna river basins—and model them as MORL environments. We then benchmark existing MORL algorithms on these tasks. Our results show that specialized water management methods outperform state-of-the-art MORL approaches, underscoring the scalability challenges these algorithms face in real-world scenarios.* 
 
-<img src="solution_sets.pdf" alt="solution_set" width="900"/> 
+<img src="solution_sets.jpg" alt="solution_set" width="900"/> 
 
 We consider three state-of-the-art MORL algorithms: PCN, CapQL and GPI-LS and one domain-specific algorithm, EMODPS. 
 
