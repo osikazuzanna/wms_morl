@@ -6,7 +6,7 @@ Official code repository for ["New Frontiers in Multi-Objective RL: Water Resour
 
 <img src="solution_sets.pdf" alt="solution_set" width="900"/> 
 
-We consider three state-of-the-art MORL algorithms: PCN, CapQL and GPI-LS and one domain-specific algorithms, EMODPS. 
+We consider three state-of-the-art MORL algorithms: PCN, CapQL and GPI-LS and one domain-specific algorithm, EMODPS. 
 
 # Description of two, novel, real-worl MORL environments
 
