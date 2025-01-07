@@ -33,7 +33,7 @@ Where in all cases:
 - Action space: Release per each reservoir (4 dimensions)
 
 
-Taken from: _Sari, Y. (2022). Exploring Trade-offs in Reservoir Operations through Many-Objective Optimization: Case of the Nile River Basin (Master’s thesis). Delft University of Technology._
+
 
 ### Susquehanna
 
@@ -64,7 +64,6 @@ Where in all cases:
 - Observation space: Water level, month (2 dimensions)
 - Action space: Release per each reservoir (4 dimensions)
 
-Taken from: _Muniak, K. (2024). RL4Water: Reinforcement Learning Environment for Water Management (Bachelor’s thesis). Delft University of Technology, Faculty of EEMCS._
 
 ## MOMDP
 
