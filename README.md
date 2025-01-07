@@ -8,9 +8,9 @@ Official code repository for ["New Frontiers in Multi-Objective RL: Water Resour
 
 We consider three state-of-the-art MORL algorithms: PCN, CapQL and GPI-LS and one domain-specific algorithms, EMODPS. 
 
-### Description of two, novel, real-worl MORL environments
+# Description of two, novel, real-worl MORL environments
 
-# Nile 
+### Nile 
 The Nile River is a critical resource in northeastern Africa, serving as a water source for hydropower, agriculture, and domestic use across multiple nations. Water rights issues, particularly between Egypt, Sudan, and Ethiopia, have intensified with Ethiopia's construction of the Grand Ethiopian Renaissance Dam (GERD), intended for hydropower generation to boost its economic development.
 
 Originally, the simulation starts at **(2025, 1, 1)** and the decisions are taken on a monthly basis over a 20-year period, resulting in **240 time steps** for each episode. It also has 4 following objectives:
@@ -35,7 +35,7 @@ Where in all cases:
 
 Taken from: _Sari, Y. (2022). Exploring Trade-offs in Reservoir Operations through Many-Objective Optimization: Case of the Nile River Basin (Master’s thesis). Delft University of Technology._
 
-# Susquehanna
+### Susquehanna
 
 The Susquehanna River, regulated by the Conowingo Dam, supports diverse needs, including hydroelectric power, water supply, and recreation. However, low-flow conditions create challenging trade-offs, forcing Conowingo to balance energy production with environmental and community water needs.
 
@@ -96,12 +96,12 @@ Additionally, in Multi-Objective Reinforcement Learning (MORL), all objectives m
 Since the objective values may be on different scales (e.g., demand deficit vs. number of months), they are normalized to the range `[-1, 1]`.
 
 
-### Running
+# Running
 
-# Running the environments
+### Running the environments
 To run an episode with random actions, run `nile_example.py` or `susquehanna_example.py`.
 
-# Training MORL agents
+### Training MORL agents
 To train MORL agents, run `train_morl.py` [[morl-baselines](https://github.com/LucasAlegre/morl-baselines)]:
  - to train Nile, run:
  ```bash
@@ -113,7 +113,7 @@ To train MORL agents, run `train_morl.py` [[morl-baselines](https://github.com/L
  python train_morl.py --algo gpi_ls_continuous --gamma 1.0 --env-id susquehanna-v0 --num-timesteps 200000 --ref-point 0 0 0 0 0 -2190 --init-hyperparams learning_rate:0.0004 buffer_size:1500000 learning_starts:100 "net_arch:[64,64]" per:True --seed 2137
 ```
 
-# Training EMODPS
+### Training EMODPS
 
 To train EMODPS agent, run `train_emodps.py`
 
@@ -127,14 +127,14 @@ To train EMODPS agent, run `train_emodps.py`
 python run_experiment.py --water-sim susquehanna --num-of-obj 6 --nfes 20000 --seed 1 --epsilons 5e-01 5e-01 5e-01 5e-01 5e-01 5e-01 --ref-point 0 0 0 0 0 -2190
 ```
 
-### Organization
+## Organization
 
 - folder **core** consists of core code to build the water environments
 - folder **examples** consists of high-level code od the environments
 - folder **rbf** consists of functions to be used for EMODPS
 
 
-### Installation  
+## Installation  
   
 The project is based on Python >=3.10. All the necessary packages are in requirements.txt.
 Create a virtual environment and install the requirements using:
