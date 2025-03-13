@@ -64,10 +64,11 @@ class BasePCNModel(nn.Module, ABC):
         c = th.cat((desired_return, desired_horizon), dim=-1)
         # commands are scaled by a fixed factor
         c = c * self.scaling_factor
-        s = self.s_emb(state.float())
+        #embedd state and commands to have the same number of features
+        s = self.s_emb(state.float()) 
         c = self.c_emb(c)
         # element-wise multiplication of state-embedding and command
-        prediction = self.fc(s * c)
+        prediction = self.fc(s * c) #modify the state feature based on the goal (desired outcomes)
         return prediction
 
 
@@ -163,7 +164,7 @@ class PCN(MOAgent, MOPolicy):
         self.desired_return = None
         self.desired_horizon = None
         self.continuous_action = True if type(self.env.action_space) is gym.spaces.Box else False
-        self.noise = noise
+        self.noise = noise #for exploration in continous action spaces
 
         if model_class and not issubclass(model_class, BasePCNModel):
             raise ValueError("model_class must be a subclass of BasePCNModel")
@@ -201,7 +202,7 @@ class PCN(MOAgent, MOPolicy):
     def update(self):
         """Update PCN model."""
         batch = []
-        # randomly choose episodes from experience buffer
+        # randomly choose episodes from experience buffer and create the data
         s_i = self.np_random.choice(np.arange(len(self.experience_replay)), size=self.batch_size, replace=True)
         for i in s_i:
             # episode is tuple (return, transitions)
@@ -214,6 +215,7 @@ class PCN(MOAgent, MOPolicy):
             batch.append((s_t, a_t, r_t, h_t))
 
         obs, actions, desired_return, desired_horizon = zip(*batch)
+        #predict the action
         prediction = self.model(
             th.tensor(obs).to(self.device),
             th.tensor(desired_return).to(self.device),
@@ -427,7 +429,7 @@ class PCN(MOAgent, MOPolicy):
             )
         self.global_step = 0
         total_episodes = num_er_episodes
-        n_checkpoints = 0
+        n_checkpoints = 0 #number of times the model has been saved
 
         # fill buffer with random episodes
         self.experience_replay = []
@@ -445,10 +447,10 @@ class PCN(MOAgent, MOPolicy):
             # add episode in-place
             self._add_episode(transitions, max_size=max_buffer_size, step=self.global_step)
 
-        while self.global_step < total_timesteps:
+        while self.global_step < total_timesteps: 
             loss = []
             entropy = []
-            for _ in range(num_model_updates):
+            for _ in range(num_model_updates): #update model multiple times
                 l, lp = self.update()
                 loss.append(l.detach().cpu().numpy())
                 if not self.continuous_action:

@@ -250,9 +250,10 @@ class CAPQL(MOAgent, MOPolicy):
             QNetwork(self.observation_dim, self.action_dim, self.reward_dim, net_arch=net_arch).to(self.device)
             for _ in range(num_q_nets)
         ]
+        #copy params of q-net to target q-net
         for q_net, target_q_net in zip(self.q_nets, self.target_q_nets):
             target_q_net.load_state_dict(q_net.state_dict())
-            for param in target_q_net.parameters():
+            for param in target_q_net.parameters(): #make sure that the params of the target network are not updated during backpropagation
                 param.requires_grad = False
 
         self.policy = Policy(
@@ -323,15 +324,15 @@ class CAPQL(MOAgent, MOPolicy):
         for _ in range(self.gradient_updates):
             (s_obs, s_actions, w, s_rewards, s_next_obs, s_dones) = self._sample_batch_experiences()
 
-            with th.no_grad():
-                next_actions, log_pi, _ = self.policy.sample(s_next_obs, w)
+            with th.no_grad(): #make sure the gradients are not computed for target q_net calculation
+                next_actions, log_pi, _ = self.policy.sample(s_next_obs, w) #log_pi used for entropy regularization
                 q_targets = th.stack([q_target(s_next_obs, next_actions, w) for q_target in self.target_q_nets])
                 min_target_q = th.min(q_targets, dim=0)[0] - self.alpha * log_pi.reshape(-1, 1)
 
                 target_q = (s_rewards + (1 - s_dones.reshape(-1, 1)) * self.gamma * min_target_q).detach()
 
-            q_values = [q_net(s_obs, s_actions, w) for q_net in self.q_nets]
-            critic_loss = (1 / self.num_q_nets) * sum([F.mse_loss(q_value, target_q) for q_value in q_values])
+            q_values = [q_net(s_obs, s_actions, w) for q_net in self.q_nets] #two q-vals from two networks
+            critic_loss = (1 / self.num_q_nets) * sum([F.mse_loss(q_value, target_q) for q_value in q_values]) #loss averaged between both q-values, here we do gradient descent
 
             self.q_optim.zero_grad()
             critic_loss.backward()
@@ -339,18 +340,18 @@ class CAPQL(MOAgent, MOPolicy):
 
             # Policy update
             pi, log_pi, _ = self.policy.sample(s_obs, w)
-            q_values = th.stack([q_target(s_obs, pi, w) for q_target in self.q_nets])
-            min_q = th.min(q_values, dim=0)[0]
+            q_values = th.stack([q_target(s_obs, pi, w) for q_target in self.q_nets]) #q-values calculation - a q-calue per each action dimension
+            min_q = th.min(q_values, dim=0)[0] #take minimum q-value out of 2
 
-            min_q = (min_q * w).sum(dim=-1, keepdim=True)
-            policy_loss = ((self.alpha * log_pi) - min_q).mean()
+            min_q = (min_q * w).sum(dim=-1, keepdim=True) #computes the sum of q-values over the action dimensions
+            policy_loss = ((self.alpha * log_pi) - min_q).mean() #with the entropy regularization term, here we do gradient ascent
 
             self.policy_optim.zero_grad()
             policy_loss.backward()
             self.policy_optim.step()
 
             for q_net, target_q_net in zip(self.q_nets, self.target_q_nets):
-                polyak_update(q_net.parameters(), target_q_net.parameters(), self.tau)
+                polyak_update(q_net.parameters(), target_q_net.parameters(), self.tau) #soft update of the target q-networks using online q-networks
 
         if self.log and self.global_step % 100 == 0:
             wandb.log(
@@ -406,7 +407,7 @@ class CAPQL(MOAgent, MOPolicy):
 
         eval_weights = equally_spaced_weights(self.reward_dim, n=num_eval_weights_for_front)
 
-        angle = th.pi * (22.5 / 180)
+        angle = th.pi * (22.5 / 180) #spread of sampled weight vectors around the base weight vector w
         weight_sampler = WeightSamplerAngle(self.env.reward_dim, angle)
 
         self.global_step = 0 if reset_num_timesteps else self.global_step
@@ -438,7 +439,7 @@ class CAPQL(MOAgent, MOPolicy):
             if self.global_step >= self.learning_starts:
                 self.update()
 
-            if eval_env is not None and self.log and self.global_step % eval_freq == 0:
+            if eval_env is not None and self.global_step % eval_freq == 0:
                 self.policy_eval(eval_env, weights=w, log=self.log)
 
             if terminated or truncated:
@@ -450,7 +451,7 @@ class CAPQL(MOAgent, MOPolicy):
             else:
                 obs = next_obs
 
-            if self.log and self.global_step % (eval_freq * 10) == 0:
+            if self.global_step % (eval_freq * 10) == 0:
                 # Evaluation
                 returns_test_tasks = [
                     policy_evaluation_mo(self, eval_env, ew, rep=num_eval_episodes_for_front)[3] for ew in eval_weights

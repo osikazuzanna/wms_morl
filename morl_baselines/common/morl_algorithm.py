@@ -268,7 +268,7 @@ class MOAgent(ABC):
             project=project_name,
             entity=entity,
             config=config,
-            name=self.full_experiment_name,
+            Name='test',
             monitor_gym=monitor_gym,
             save_code=True,
             group=group,

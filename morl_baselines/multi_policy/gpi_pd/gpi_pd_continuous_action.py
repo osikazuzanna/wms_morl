@@ -50,11 +50,11 @@ class Policy(nn.Module):
         """Forward pass of the policy network."""
         h = self.latent_pi(th.concat((obs, w), dim=obs.dim() - 1))
         action = self.mean(h)
-        action = th.tanh(action)
-        if noise is not None:
+        action = th.tanh(action) #bound the action to range -1,1 via tanh activation function
+        if noise is not None: #add noise
             n = (th.randn_like(action) * noise).clamp(-noise_clip, noise_clip)
             action = (action + n).clamp(-1, 1)
-        return action * self.action_scale + self.action_bias
+        return action * self.action_scale + self.action_bias #rescale
 
 
 class QNetwork(nn.Module):
@@ -383,7 +383,7 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
             else:
                 (s_obs, s_actions, s_rewards, s_next_obs, s_dones) = self._sample_batch_experiences()
 
-            if len(self.weight_support) > 1:
+            if len(self.weight_support) > 1: #duplicate the batch for different vectors from the vector support
                 s_obs, s_actions, s_rewards, s_next_obs, s_dones = (
                     s_obs.repeat(2, 1),
                     s_actions.repeat(2, 1),
@@ -399,7 +399,7 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
 
             with th.no_grad():
                 next_actions = self.target_policy(s_next_obs, w, noise=self.policy_noise, noise_clip=self.noise_clip)
-                q_targets = th.stack([q_target(s_next_obs, next_actions, w) for q_target in self.target_q_nets])
+                q_targets = th.stack([q_target(s_next_obs, next_actions, w) for q_target in self.target_q_nets]) #we get 4 different q-vals wrt each reward
                 scalarized_q_targets = th.einsum("nbr,br->nb", q_targets, w)
                 inds = th.argmin(scalarized_q_targets, dim=0, keepdim=True)
                 inds = inds.reshape(1, -1, 1).expand(1, q_targets.size(1), q_targets.size(2))
@@ -414,8 +414,8 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
             critic_loss.backward()
             self.q_optim.step()
 
-            if self.per:
-                per = (q_values[0] - target_q)[: len(idxes)].detach().abs() * 0.05
+            if self.per: #update priorities of the experience buffer to imporive efficiency of experience based on TD error
+                per = (q_values[0] - target_q)[: len(idxes)].detach().abs() * 0.05 #compute temporal difference
                 per = th.einsum("br,br->b", per, w[: len(idxes)])
                 priority = per.cpu().numpy().flatten()
                 priority = priority.clip(min=self.min_priority) ** self.alpha
@@ -424,11 +424,11 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
             for q_net, target_q_net in zip(self.q_nets, self.target_q_nets):
                 polyak_update(q_net.parameters(), target_q_net.parameters(), self.tau)
 
-            if self._n_updates % self.delay_policy_update == 0:
+            if self._n_updates % self.delay_policy_update == 0: #policy is updated less frequently than the q-netowrk
                 # Policy update
                 actions = self.policy(s_obs, w)
                 q_values_pi = (1 / self.num_q_nets) * sum(q_net(s_obs, actions, w) for q_net in self.q_nets)
-                policy_loss = -th.einsum("br,br->b", q_values_pi, w).mean()
+                policy_loss = -th.einsum("br,br->b", q_values_pi, w).mean() #gradient ascent - maximize the q-value
 
                 self.policy_optim.zero_grad()
                 policy_loss.backward()
@@ -517,7 +517,7 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
             eval_freq (int): Number of timesteps between evaluations.
             reset_num_timesteps (bool): Whether to reset the number of timesteps.
         """
-        weight_support = unique_tol(weight_support)
+        weight_support = unique_tol(weight_support) #ensure the weight support set contains unique weights
         self.set_weight_support(weight_support)
         tensor_w = th.tensor(weight).float().to(self.device)
 
@@ -635,7 +635,7 @@ class GPIPDContinuousAction(MOAgent, MOPolicy):
                 }
             )
         max_iter = total_timesteps // timesteps_per_iter
-        linear_support = LinearSupport(num_objectives=self.reward_dim, epsilon=0.0 if weight_selection_algo == "ols" else None)
+        linear_support = LinearSupport(num_objectives=self.reward_dim, epsilon=0.0 if weight_selection_algo == "ols" else None) # for computing corner weights when using linear utility functions
 
         eval_weights = equally_spaced_weights(self.reward_dim, n=num_eval_weights_for_front)
 
