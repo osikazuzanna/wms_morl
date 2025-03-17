@@ -2,7 +2,7 @@
 Official code repository for ["New Frontiers in Multi-Objective RL: Water Resource Management (AAMAS-2025)](https://ebooks.iospress.nl/doi/10.3233/FAIA240830).  
 
 
-*Many real-world problems (e.g., water resource management, autonomous driving, drug discovery) require optimizing multiple, conflicting objectives. Multi-objective reinforcement learning (MORL) extends classical RL to handle several objectives simultaneously, yielding a set of policies that capture various trade-offs. However, the field still lacks complex, realistic environments and benchmarks. We introduce two water resource management case studies—the Nile and Susquehanna river basins—and model them as MORL environments. We then benchmark existing MORL algorithms on these tasks. Our results show that specialized water management methods outperform state-of-the-art MORL approaches, underscoring the scalability challenges these algorithms face in real-world scenarios.* 
+*Many real-world problems (e.g., resource management, autonomous driving, drug discovery) require optimizing multiple, conflicting objectives. Multi-objective reinforcement learning (MORL) extends classic reinforcement learning to handle multiple objectives simultaneously, yielding a set of policies that capture various trade-offs. However, the MORL field lacks complex, realistic environments and benchmarks. We introduce a water resource (Nile river basin) management case study and model it as a MORL environment. We then benchmark existing MORL algorithms on this task. Our results show that specialized water management methods outperform state-of-the-art MORL approaches, underscoring the scalability challenges MORL algorithms face in real-world scenarios.* 
 
 <img src="solution_sets.jpg" alt="solution_set" width="900"/> 
 
@@ -22,47 +22,6 @@ Originally, the simulation starts at **(2025, 1, 1)** and the decisions are take
 
 Where max/main signifies whether an objective is to be maximised or minimised. The reference point is used for calculating hypervolume as the worst case scenario in terms of acquired rewards by the agent at the end of the simulation.
 
-Currently the user may pick their own number of objectives they want to use in their simulations with:
-
-- 2 objectives: Ethiopia power (max) and Egypt deficit (min)
-- 3 objectives: Ethiopia power (max), Egypt deficit (min), and Sudan deficit (min)
-- 4 objectives: All original objectives
-
-Where in all cases:
-- Observation space: Storage in 4 reservoirs, month (5 dimensions)
-- Action space: Release per each reservoir (4 dimensions)
-
-
-
-
-### Susquehanna
-
-The Susquehanna River, regulated by the Conowingo Dam, supports diverse needs, including hydroelectric power, water supply, and recreation. However, low-flow conditions create challenging trade-offs, forcing Conowingo to balance energy production with environmental and community water needs.
-
-Originally, the simulation starts at **(2021, 1, 1)** and the decisions are made every 4 hours throughout a year resulting in **2190 time steps** per episode (the whole simulation). It also has 6 following objectives:
-
-
-1. <span style="color:blue"> Recreation (max), ref point: 0.0<span style="color:blue">
-2. <span style="color:blue"> Energy revenue (max), ref point: 0.0 <span style="color:blue">
-3. <span style="color:blue"> Baltimore (max), ref point: 0.0  <span style="color:blue">
-4. <span style="color:blue"> Atomic (max), ref point: 0.0 <span style="color:blue">
-5. <span style="color:blue"> Chester (max), ref point: 0.0 <span style="color:blue">
-6. <span style="color:blue"> Environment (min), ref point: -2190 <span style="color:blue">
-
-Where max/main signifies whether an objective is to be maximised or minimised. The reference point is used for calculating hypervolume as the worst case scenario in terms of acquired rewards by the agent at the end of the simulation.
-
-Currently the user may pick their own number of objectives they want to use in their simulations with:
-
-  - 2 objectives: Baltimore (max) vs Chester (max)
-  - 3 objectives: Baltimore (max), Atomic (max), Chester (max)
-  - 4 objectives: Baltimore (max), Atomic (max), Chester (max), Recreation (max)
-  - 5 objectives: Baltimore (max), Atomic (max), Chester (max), Recreation (max), revenue (max)
-  - 6 objectives: Baltimore (max), Atomic (max), Chester (max), Recreation (max), revenue (max), environmental index (min)
-
-
-Where in all cases:
-- Observation space: Water level, month (2 dimensions)
-- Action space: Release per each reservoir (4 dimensions)
 
 
 ## MOMDP
@@ -90,7 +49,7 @@ The environment returns a reward vector, whose dimension is determined by the nu
 Additionally, in Multi-Objective Reinforcement Learning (MORL), all objectives must be framed as maximization problems. Objectives that need to be minimized are converted by transforming their rewards to negative values, effectively reframing them as maximization tasks.
 
 - **Nile**: The reward is four-dimensional (refer to Table X for details).
-- **Susquehanna**: The reward is six-dimensional (refer to Table Y for details).
+
 
 Since the objective values may be on different scales (e.g., demand deficit vs. number of months), they are normalized to the range `[-1, 1]`.
 
@@ -98,7 +57,8 @@ Since the objective values may be on different scales (e.g., demand deficit vs. 
 # Running
 
 ### Running the environments
-To run an episode with random actions, run `nile_example.py` or `susquehanna_example.py`.
+To run an episode with random actions, run `nile_example.py`.
+
 
 ### Training MORL agents
 To train MORL agents, run `train_morl.py` [[morl-baselines](https://github.com/LucasAlegre/morl-baselines)]:
@@ -107,10 +67,6 @@ To train MORL agents, run `train_morl.py` [[morl-baselines](https://github.com/L
  python train_morl.py --algo pcn --gamma 1.0 --env-id nile-v0 --num-timesteps 2000000 --ref-point 0 -240 -240 0 --seed 2 --init-hyperparams learning_rate:0.0003 hidden_dim:64 
  ```
 
- - to train Susquehanna, run:
- ```bash
- python train_morl.py --algo gpi_ls_continuous --gamma 1.0 --env-id susquehanna-v0 --num-timesteps 200000 --ref-point 0 0 0 0 0 -2190 --init-hyperparams learning_rate:0.0004 buffer_size:1500000 learning_starts:100 "net_arch:[64,64]" per:True --seed 2137
-```
 
 ### Training EMODPS
 
@@ -121,10 +77,6 @@ To train EMODPS agent, run `train_emodps.py`
  python python run_experiment.py --water-sim nile --num-of-obj 4 --nfes 200000 --seed 1 --epsilons 5e-01 5e-01 5e-01 5e-01 --ref-point 0 -240 -240 0
  ```
 
- - to train Susquehanna, run:
- ```bash
-python run_experiment.py --water-sim susquehanna --num-of-obj 6 --nfes 20000 --seed 1 --epsilons 5e-01 5e-01 5e-01 5e-01 5e-01 5e-01 --ref-point 0 0 0 0 0 -2190
-```
 
 ## Organization
 
